@@ -1,0 +1,9 @@
+repo: git@github.com:juju-solutions/layer-apache-bigtop-plugin.git
+includes: ['layer:apache-bigtop-gateway', 'interface:hadoop-plugin']
+options:
+  basic:
+    use_venv: true
+  apache-bigtop-base:
+    bigtop_component_list: 'all'
+  apache-bigtop-gateway:
+    silent: true
