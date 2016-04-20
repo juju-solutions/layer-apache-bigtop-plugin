@@ -10,7 +10,7 @@ Apache Bigtop Gateway that includes all the Bigtop clients.
 ## Usage
 
 This charm is intended to be deployed via one of the
-[apache bundles](https://jujucharms.com/u/bigdata-charmers/#bundles).
+[apache bigtop bundles](https://jujucharms.com/u/bigdata-charmers/#bundles).
 For example:
 
     juju quickstart bigtop-processing-mapreduce

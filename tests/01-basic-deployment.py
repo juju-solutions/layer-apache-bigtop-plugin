@@ -17,7 +17,7 @@ class TestDeploy(unittest.TestCase):
         self.d = amulet.Deployment(series='trusty')
         self.d.load({
             'services': {
-                'client': {'charm': 'ubuntu'},
+                'client': {'charm': 'hadoop-client'},
                 'plugin': {'charm': 'apache-bigtop-plugin'},
             },
             'relations': [('client', 'plugin')],

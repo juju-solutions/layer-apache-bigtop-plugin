@@ -18,6 +18,3 @@ requires:
   hadoop-plugin:
     interface: hadoop-plugin
     scope: container
-  juju-info:
-    interface: juju-info
-    scope: container
