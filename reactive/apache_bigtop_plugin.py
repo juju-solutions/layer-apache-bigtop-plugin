@@ -59,21 +59,20 @@ def clear_hdfs_ready(principal):
     remove_state('apache-bigtop-plugin.hdfs.installed')
 
 
-@when('puppet.available', 'hadoop-plugin.joined', 'resourcemanager.joined')
+@when('puppet.available', 'hadoop-plugin.joined', 'namenode.joined', 'resourcemanager.joined')
 @when_not('apache-bigtop-plugin.yarn.installed')
-def install_hadoop_client_yarn(principal, resourcemanager):
-    if resourcemanager.resourcemanagers():
+def install_hadoop_client_yarn(principal, namenode, resourcemanager):
+    if namenode.namenodes() and resourcemanager.resourcemanagers():
         hookenv.status_set('maintenance', 'installing plugin (yarn)')
-        # RM will send both NN and RM, no need to get data from the NN here
-        nn_host = resourcemanager.resourcemanagers()[0]
-        rm_host = resourcemanager.resourcemanagers()[1]
+        nn_host = namenode.namenodes()[0]
+        rm_host = resourcemanager.resourcemanagers()[0]
         bigtop = get_bigtop_base()
         hosts = {'namenode': nn_host, 'resourcemanager': rm_host}
         bigtop.install(hosts=hosts, roles='hadoop-client')
         set_state('apache-bigtop-plugin.yarn.installed')
         hookenv.status_set('active', 'ready (HDFS & YARN)')
     else:
-        hookenv.status_set('waiting', 'waiting for resourcemanager fqdn')
+        hookenv.status_set('waiting', 'waiting for master fqdns')
 
 
 @when('apache-bigtop-plugin.yarn.installed')
@@ -82,7 +81,6 @@ def install_hadoop_client_yarn(principal, resourcemanager):
 def send_rm_spec(principal, resourcemanager):
     """Send our plugin spec so the resourcemanager can become ready."""
     bigtop = get_bigtop_base()
-    # Send plugin spec (must match RM spec for 'resourcemanager.ready' to be set)
     resourcemanager.set_local_spec(bigtop.spec())
 
 
