@@ -1,6 +1,6 @@
 from charms.reactive import is_state, remove_state, set_state, when, when_any, when_none, when_not
 from charmhelpers.core import hookenv
-from charms.layer.apache_bigtop_base import get_bigtop_base, get_hadoop_version
+from charms.layer.apache_bigtop_base import Bigtop, get_hadoop_version
 
 
 @when('hadoop-plugin.joined')
@@ -9,7 +9,7 @@ def blocked(principal):
     hookenv.status_set('blocked', 'missing required namenode relation')
 
 
-@when('puppet.available', 'hadoop-plugin.joined', 'namenode.joined')
+@when('bigtop.available', 'hadoop-plugin.joined', 'namenode.joined')
 @when_not('apache-bigtop-plugin.hdfs.installed')
 def install_hadoop_client_hdfs(principal, namenode):
     """Install if the namenode has sent its FQDN.
@@ -21,9 +21,10 @@ def install_hadoop_client_hdfs(principal, namenode):
     if namenode.namenodes():
         hookenv.status_set('maintenance', 'installing plugin (hdfs)')
         nn_host = namenode.namenodes()[0]
-        bigtop = get_bigtop_base()
+        bigtop = Bigtop()
         hosts = {'namenode': nn_host}
-        bigtop.install(hosts=hosts, roles='hadoop-client')
+        bigtop.render_site_yaml(hosts=hosts, roles='hadoop-client')
+        bigtop.trigger_puppet()
         set_state('apache-bigtop-plugin.hdfs.installed')
         hookenv.status_set('maintenance', 'plugin (hdfs) installed')
     else:
@@ -35,7 +36,7 @@ def install_hadoop_client_hdfs(principal, namenode):
 @when_not('namenode.ready')
 def send_nn_spec(principal, namenode):
     """Send our plugin spec so the namenode can become ready."""
-    bigtop = get_bigtop_base()
+    bigtop = Bigtop()
     # Send plugin spec (must match NN spec for 'namenode.ready' to be set)
     namenode.set_local_spec(bigtop.spec())
 
@@ -59,16 +60,17 @@ def clear_hdfs_ready(principal):
     remove_state('apache-bigtop-plugin.hdfs.installed')
 
 
-@when('puppet.available', 'hadoop-plugin.joined', 'namenode.joined', 'resourcemanager.joined')
+@when('bigtop.available', 'hadoop-plugin.joined', 'namenode.joined', 'resourcemanager.joined')
 @when_not('apache-bigtop-plugin.yarn.installed')
 def install_hadoop_client_yarn(principal, namenode, resourcemanager):
     if namenode.namenodes() and resourcemanager.resourcemanagers():
         hookenv.status_set('maintenance', 'installing plugin (yarn)')
         nn_host = namenode.namenodes()[0]
         rm_host = resourcemanager.resourcemanagers()[0]
-        bigtop = get_bigtop_base()
+        bigtop = Bigtop()
         hosts = {'namenode': nn_host, 'resourcemanager': rm_host}
-        bigtop.install(hosts=hosts, roles='hadoop-client')
+        bigtop.render_site_yaml(hosts=hosts, roles='hadoop-client')
+        bigtop.trigger_puppet()
         set_state('apache-bigtop-plugin.yarn.installed')
         hookenv.status_set('active', 'ready (HDFS & YARN)')
     else:
@@ -80,7 +82,7 @@ def install_hadoop_client_yarn(principal, namenode, resourcemanager):
 @when_not('resourcemanager.ready')
 def send_rm_spec(principal, resourcemanager):
     """Send our plugin spec so the resourcemanager can become ready."""
-    bigtop = get_bigtop_base()
+    bigtop = Bigtop()
     resourcemanager.set_local_spec(bigtop.spec())
 
 
